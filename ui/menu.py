@@ -6,10 +6,13 @@ hard_button = pygame.Rect(250, 420, 300, 60)
 
 
 def draw_menu(screen):
+
     font = pygame.font.SysFont(None, 50)
+
     screen.fill((240, 240, 240))
 
     title = font.render("Sequence AI", True, (0, 0, 0))
+
     screen.blit(title, (280, 80))
 
     pygame.draw.rect(screen, (0, 200, 0), easy_button)
@@ -21,7 +24,7 @@ def draw_menu(screen):
     hard_text = font.render("Hard", True, (255, 255, 255))
 
     screen.blit(easy_text, (350, 195))
-    screen.blit(medium_text, (330, 315))
+    screen.blit(medium_text, (320, 315))
     screen.blit(hard_text, (350, 435))
 
 
