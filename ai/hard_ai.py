@@ -3,79 +3,235 @@ from ai.evaluation import evaluate_board
 PLAYER = 1
 AI = 2
 
+MAX_DEPTH = 2
+
+
+# GET ALL LEGAL MOVES
+
+def get_legal_moves(board, hand):
+
+        moves = []
+
+        for row in range(10):
+
+            for col in range(10):
+
+                board_card = board[row][col]["card"]
+
+                board_chip = board[row][col]["chip"]
+
+                # Skip occupied
+                if board_chip != 0:
+                    continue
+
+                # =====================================
+                # CHECK NEARBY ACTIVITY
+                # =====================================
+
+                nearby = False
+
+                for r in range(max(0, row - 1), min(10, row + 2)):
+
+                    for c in range(max(0, col - 1), min(10, col + 2)):
+
+                        if board[r][c]["chip"] != 0:
+                            nearby = True
+
+                # Ignore isolated positions
+                if not nearby:
+                    continue
+
+                # =====================================
+                # NORMAL CARD MATCH
+                # =====================================
+
+                if board_card in hand:
+
+                    moves.append((row, col, board_card))
+
+                # =====================================
+                # JOKER SUPPORT
+                # =====================================
+
+                elif any(card.startswith("J") for card in hand):
+
+                    joker = next(
+                        card for card in hand
+                        if card.startswith("J")
+                    )
+
+                    moves.append((row, col, joker))
+
+        # =====================================
+        # FALLBACK FOR EARLY GAME
+        # =====================================
+
+        if not moves:
+
+            for row in range(10):
+
+                for col in range(10):
+
+                    board_card = board[row][col]["card"]
+
+                    board_chip = board[row][col]["chip"]
+
+                    if board_chip != 0:
+                        continue
+
+                    if board_card in hand:
+                        moves.append((row, col, board_card))
+
+        return moves
+
+
+# MAIN AI MOVE
 
 def get_move(board, ai_hand):
 
-    best_score = -9999
+    best_score = -99999
 
     best_move = None
 
-    # =====================================
-    # TRY EVERY AI MOVE
-    # =====================================
+    alpha = -99999
+    beta = 99999
 
-    for row in range(10):
+    legal_moves = get_legal_moves(board, ai_hand)
 
-        for col in range(10):
+    for move in legal_moves:
 
-            board_card = board[row][col]["card"]
+        row, col, used_card = move
 
-            board_chip = board[row][col]["chip"]
+        # Simulate AI move
+        board[row][col]["chip"] = AI
 
-            # Legal move
-            if board_card in ai_hand and board_chip == 0:
+        # Remove used card temporarily
+        temp_hand = ai_hand.copy()
+        temp_hand.remove(used_card)
 
-                # Simulate AI move
-                board[row][col]["chip"] = AI
+        score = minimax(
+            board,
+            MAX_DEPTH,
+            False,
+            alpha,
+            beta,
+            temp_hand
+        )
 
-                # Simulate player response
-                opponent_score = simulate_player_response(board)
+        # Undo move
+        board[row][col]["chip"] = 0
 
-                # Final score
-                final_score = evaluate_board(board) - opponent_score
+        if score > best_score:
 
-                # Undo move
-                board[row][col]["chip"] = 0
+            best_score = score
 
-                # Store best move
-                if final_score > best_score:
+            best_move = move
 
-                    best_score = final_score
-
-                    best_move = (
-                        row,
-                        col,
-                        board_card
-                    )
+        alpha = max(alpha, best_score)
 
     return best_move
 
 
-# =====================================
-# SIMULATE PLAYER RESPONSE
-# =====================================
+# MINIMAX WITH ALPHA-BETA PRUNING
 
-def simulate_player_response(board):
+def minimax(
+        board,
+        depth,
+        maximizing_player,
+        alpha,
+        beta,
+        ai_hand
+):
 
-    worst_case = -9999
+    # STOP CONDITION
 
-    # Pretend player can move anywhere useful
-    for row in range(10):
+    if depth == 0:
+        return evaluate_board(board)
 
-        for col in range(10):
+    # MAXIMIZING PLAYER (AI)
 
-            if board[row][col]["chip"] == 0:
+    if maximizing_player:
 
-                # Simulate player move
-                board[row][col]["chip"] = PLAYER
+        max_eval = -99999
 
-                score = evaluate_board(board)
+        legal_moves = get_legal_moves(board, ai_hand)
 
-                # Undo move
-                board[row][col]["chip"] = 0
+        if not legal_moves:
+            return evaluate_board(board)
 
-                # Strongest player response
-                if score > worst_case:
-                    worst_case = score
+        for move in legal_moves:
 
-    return worst_case
+            row, col, used_card = move
+
+            # Simulate move
+            board[row][col]["chip"] = AI
+
+            # Temporary hand update
+            temp_hand = ai_hand.copy()
+
+            if used_card in temp_hand:
+                temp_hand.remove(used_card)
+
+            eval_score = minimax(
+                board,
+                depth - 1,
+                False,
+                alpha,
+                beta,
+                temp_hand
+            )
+
+            # Undo move
+            board[row][col]["chip"] = 0
+
+            max_eval = max(max_eval, eval_score)
+
+            alpha = max(alpha, eval_score)
+
+            # ALPHA-BETA PRUNING
+
+            if beta <= alpha:
+                break
+
+        return max_eval
+
+    # MINIMIZING PLAYER
+
+    else:
+
+        min_eval = 99999
+
+        # Simulate possible player moves
+        for row in range(10):
+
+            for col in range(10):
+
+                if board[row][col]["chip"] == 0:
+
+                    # Simulate player move
+                    board[row][col]["chip"] = PLAYER
+
+                    eval_score = minimax(
+                        board,
+                        depth - 1,
+                        True,
+                        alpha,
+                        beta,
+                        ai_hand
+                    )
+
+                    # Undo move
+                    board[row][col]["chip"] = 0
+
+                    min_eval = min(min_eval, eval_score)
+
+                    beta = min(beta, eval_score)
+
+                    # =====================================
+                    # ALPHA-BETA PRUNING
+                    # =====================================
+
+                    if beta <= alpha:
+                        break
+
+        return min_eval
