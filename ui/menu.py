@@ -1,32 +1,134 @@
 import pygame
 
-easy_button = pygame.Rect(250, 180, 300, 60)
-medium_button = pygame.Rect(250, 300, 300, 60)
-hard_button = pygame.Rect(250, 420, 300, 60)
+# =====================================
+# BUTTONS
+# =====================================
 
+easy_button = pygame.Rect(250, 180, 300, 80)
+
+medium_button = pygame.Rect(250, 300, 300, 80)
+
+hard_button = pygame.Rect(250, 420, 300, 80)
+
+
+# =====================================
+# DRAW MENU
+# =====================================
 
 def draw_menu(screen):
 
-    font = pygame.font.SysFont(None, 50)
+    # Background
+    screen.fill((235, 235, 235))
 
-    screen.fill((240, 240, 240))
+    # Fonts
+    title_font = pygame.font.SysFont("Arial", 70, bold=True)
 
-    title = font.render("Sequence AI", True, (0, 0, 0))
+    button_font = pygame.font.SysFont("Arial", 40, bold=True)
 
-    screen.blit(title, (280, 80))
+    subtitle_font = pygame.font.SysFont("Arial", 24)
 
-    pygame.draw.rect(screen, (0, 200, 0), easy_button)
-    pygame.draw.rect(screen, (255, 200, 0), medium_button)
-    pygame.draw.rect(screen, (200, 0, 0), hard_button)
+    # =====================================
+    # TITLE
+    # =====================================
 
-    easy_text = font.render("Easy", True, (255, 255, 255))
-    medium_text = font.render("Medium", True, (255, 255, 255))
-    hard_text = font.render("Hard", True, (255, 255, 255))
+    title = title_font.render(
+        "SEQUENCE AI",
+        True,
+        (30, 30, 30)
+    )
 
-    screen.blit(easy_text, (350, 195))
-    screen.blit(medium_text, (320, 315))
-    screen.blit(hard_text, (350, 435))
+    screen.blit(title, (180, 60))
 
+    subtitle = subtitle_font.render(
+        "Choose Difficulty Level",
+        True,
+        (80, 80, 80)
+    )
+
+    screen.blit(subtitle, (280, 130))
+
+    # =====================================
+    # DRAW BUTTONS
+    # =====================================
+
+    draw_button(
+        screen,
+        easy_button,
+        (40, 170, 90),
+        "Easy",
+        button_font
+    )
+
+    draw_button(
+        screen,
+        medium_button,
+        (230, 180, 40),
+        "Medium",
+        button_font
+    )
+
+    draw_button(
+        screen,
+        hard_button,
+        (200, 60, 60),
+        "Hard",
+        button_font
+    )
+
+
+# =====================================
+# DRAW SINGLE BUTTON
+# =====================================
+
+def draw_button(screen, rect, color, text, font):
+
+    # Shadow
+    shadow_rect = pygame.Rect(
+        rect.x + 5,
+        rect.y + 5,
+        rect.width,
+        rect.height
+    )
+
+    pygame.draw.rect(
+        screen,
+        (170, 170, 170),
+        shadow_rect,
+        border_radius=20
+    )
+
+    # Main rounded button
+    pygame.draw.rect(
+        screen,
+        color,
+        rect,
+        border_radius=20
+    )
+
+    # White border
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        rect,
+        3,
+        border_radius=20
+    )
+
+    # Button text
+    text_surface = font.render(
+        text,
+        True,
+        (255, 255, 255)
+    )
+
+    text_rect = text_surface.get_rect(center=rect.center)
+
+    screen.blit(text_surface, text_rect)
+
+
+# =====================================
+# HANDLE CLICKS
+# =====================================
 
 def handle_menu_click(pos):
 
