@@ -148,7 +148,7 @@ def minimax(
     if depth == 0:
         return evaluate_board(board)
 
-    # MAXIMIZING PLAYER (AI)
+    # MAXIMIZING AI
 
     if maximizing_player:
 
